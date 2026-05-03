@@ -1,0 +1,32 @@
+name: 自动同步上游更新
+on:
+  schedule:
+    - cron: '0 10 * * *'   # 每天UTC 0点执行（北京时间早8点）
+  workflow_dispatch:      # 允许手动点按钮触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出当前仓库代码
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: 配置 Git 用户
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: 添加上游仓库
+        run: git remote add upstream https://github.com/daviddengxzz/katabump-renew.git  # 改这里
+
+      - name: 拉取上游更新
+        run: git fetch upstream
+
+      - name: 合并上游 main 到本地
+        run: git merge upstream/main --allow-unrelated-histories
+
+      - name: 推送到自己的 Fork
+        run: git push origin main
